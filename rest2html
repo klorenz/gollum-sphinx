@@ -1,0 +1,235 @@
+#!/usr/bin/env python
+"""
+rest2html - A small wrapper file for parsing ReST files at GitHub.
+
+Written in 2008 by Jannis Leidel <jannis@leidel.info>
+
+Brandon Keepers <bkeepers@github.com>
+Bryan Veloso <bryan@revyver.com>
+Chris Wanstrath <chris@ozmm.org>
+Dave Abrahams <dave@boostpro.com>
+Garen Torikian <garen@github.com>
+Gasper Zejn <zejn@kiberpipa.org>
+Michael Jones <m.pricejones@gmail.com>
+Sam Whited <sam@samwhited.com>
+Tyler Chung <zonyitoo@gmail.com>
+Vicent Marti <tanoku@gmail.com>
+
+To the extent possible under law, the author(s) have dedicated all copyright
+and related and neighboring rights to this software to the public domain
+worldwide. This software is distributed without any warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication along with
+this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+"""
+
+__author__ = "Jannis Leidel"
+__license__ = "CC0"
+__version__ = "0.1"
+
+import sys
+import os
+
+# This fixes docutils failing with unicode parameters to CSV-Table. The -S
+# switch and the following 2 lines can be removed after upgrading to python 3.
+reload(sys)
+sys.setdefaultencoding('utf-8')
+import site
+
+try:
+    import locale
+    locale.setlocale(locale.LC_ALL, '')
+except:
+    pass
+
+import codecs
+
+from docutils.core import publish_parts
+from docutils.writers.html4css1 import Writer, HTMLTranslator
+
+# from sphinx
+
+from sphinx.writers.html import HTMLWriter as SphinxWriter, HTMLTranslator as SphinxHTMLTranslator
+from sphinx.application import Sphinx
+
+SETTINGS = {
+    'cloak_email_addresses': True,
+    'file_insertion_enabled': False,
+    'raw_enabled': False,
+    'strip_comments': True,
+    'doctitle_xform': True,
+    'sectsubtitle_xform': True,
+    'initial_header_level': 2,
+    'report_level': 5,
+    'syntax_highlight' : 'none',
+    'math_output' : 'latex',
+    'field_name_limit': 50,
+}
+
+class GitHubHTMLTranslator(HTMLTranslator):
+    # removes the <div class="document"> tag wrapped around docs
+    # see also: http://bit.ly/1exfq2h (warning! sourceforge link.)
+    def depart_document(self, node):
+        HTMLTranslator.depart_document(self, node)
+        self.html_body.pop(0)
+        self.html_body.pop()
+
+    # technique for visiting sections, without generating additional divs
+    # see also: http://bit.ly/NHtyRx
+    def visit_section(self, node):
+        self.section_level += 1
+
+    def depart_section(self, node):
+        self.section_level -= 1
+
+    def visit_literal_block(self, node):
+        classes = node.attributes['classes']
+        if len(classes) >= 2 and classes[0] == 'code':
+            language = classes[1]
+            del classes[:]
+            self.body.append(self.starttag(node, 'pre', lang=language))
+        else:
+            self.body.append(self.starttag(node, 'pre'))
+
+    def visit_table(self, node):
+        classes = ' '.join(['docutils', self.settings.table_style]).strip()
+        self.body.append(
+                self.starttag(node, 'table', CLASS=classes))
+
+    def depart_table(self, node):
+        self.body.append('</table>\n')
+
+    def depart_image(self, node):
+      uri = node['uri']
+      ext = os.path.splitext(uri)[1].lower()
+      # we need to swap RST's use of `object` with `img` tags
+      # see http://git.io/5me3dA
+      if ext == ".svg":
+        # preserve essential attributes
+        atts = {}
+        for attribute, value in  node.attributes.items():
+          # we have no time for empty values
+          if value:
+            if attribute == "uri":
+              atts['src'] = value
+            else:
+              atts[attribute] = value
+
+        # toss off `object` tag
+        self.body.pop()
+        # add on `img` with attributes
+        self.body.append(self.starttag(node, 'img', **atts))
+      self.body.append(self.context.pop())
+
+
+def do_publish():
+    # publish manually
+    pub = Publisher(reader=SphinxStandaloneReader(),
+                    writer=SphinxWriter(),
+                    source_class=SphinxSourceClass,
+                    destination_class=NullOutput)
+    pub.set_components(None, 'restructuredtext', None)
+    pub.process_programmatic_settings(None, self.settings, None)
+    if docutils_version < (0, 8):  #1531
+        pub.set_source(None, src_path.encode(fs_encoding))
+    else:
+        pub.set_source(None, src_path)
+    pub.set_destination(None, None)
+    pub.publish()
+    doctree = pub.document
+
+
+def main():
+    """
+    Parses the given ReST file or the redirected string input and returns the
+    HTML body.
+
+    Usage: rest2html < README.rst
+           rest2html README.rst
+    """
+#    import rpdb2 ; rpdb2.start_embedded_debugger("foo")
+    try:
+        text = codecs.open(sys.argv[1], 'r', 'utf-8').read()
+    except IOError: # given filename could not be found
+        return ''
+    except IndexError: # no filename given
+        text = sys.stdin.read()
+
+    #writer = Writer()
+    #writer.translator_class = GitHubHTMLTranslator
+
+    # Need Serializing HTML Builder and build only one file.
+    from os.path import join, dirname
+
+    repo       = os.environ.get('GOLLUM_REPO')
+    work_dir   = os.environ.get('GOLLUM_WORK_DIR', repo)
+    confdir    = dirname(__file__)
+    outdir     = os.environ.get('GOLLUM_SPHINX_OUT_DIR', join(work_dir, "_build", "html"))
+    doctreedir = os.environ.get('GOLLUM_SPHINX_DOCTREE_DIR', join(work_dir, "_build", "doctrees"))
+    srcdir     = os.environ.get('GOLLUM_SPHINX_SRC_DIR', work_dir)
+
+    buildername = "gollum"
+
+    # source dir from GOLLUM_WORK_DIR
+    # GOLLUM_SPHINX_CONF_DIR
+    # GOLLUM_SPHINX_SOURCE_DIR
+    # GOLLUM_SPHINX_BUILD_DIR
+    # GOLLUM_SPHINX_DOCTREE_DIR
+    #
+    # buildername is something like json or pickle or html
+
+    # have to wrap handle_page and handle_finish
+    #
+    #
+    # Setup a very own config, which uses add_builder to add the builder
+    # to sphinx, which does not store the output, and can handle stdin input
+    # and then it includes the original config from GOLLUM_WORK_DIR
+
+    from cStringIO import StringIO
+    status         = StringIO()
+    warning        = status
+    #error   =
+    freshenv       = False
+    warningiserror = False
+    tags           = []
+    verbosity      = 0
+    parallel       = 0
+    force_all      = False
+
+    confoverrides = {}
+
+    app = Sphinx(srcdir, confdir, outdir, doctreedir, "gollum",
+                     confoverrides, status, warning, freshenv,
+                     warningiserror, tags, verbosity, parallel)
+
+    #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
+    #app.build(force_all, text)
+
+    writer = SphinxWriter(app.builder)
+
+#    builder = Sphinx
+#    writer = SphinxWriter()
+
+    settings = app.env.settings
+    settings['env'].docname = "<preview>"
+    app.env.found_docs.add('<preview>')
+
+    #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
+    parts = publish_parts(text, writer=writer, settings_overrides=settings)
+
+    #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
+
+    if 'html_body' in parts:
+        html = parts['html_body']
+
+        # publish_parts() in python 2.x return dict values as Unicode type
+        # in py3k Unicode is unavailable and values are of str type
+        if isinstance(html, str):
+            return html
+        else:
+            return html.encode('utf-8')
+    return ''
+
+if __name__ == '__main__':
+    sys.stdout.write("%s%s" % (main(), "\n"))
+    sys.stdout.flush()
