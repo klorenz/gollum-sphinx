@@ -1,0 +1,129 @@
+<style>
+/* copied from gollum's editor.css */
+#gollum-preview {
+    overflow: auto;
+}
+.ff #gollum-preview, .ie #gollum-preview {
+    padding-bottom: 1em;
+}
+
+#gollum-preview {
+/*    border: 1px solid #E4E4E4;
+    background: none repeat scroll 0% 0% #F9F9F9;
+    border-radius: 1em; 
+*/
+    margin: 1em 0px 5em;
+}
+#gollum-preview {
+    padding: 0em 1em 0.4em;
+}
+
+/* now own ones */
+
+
+#wiki-wrapper.edit {
+    width: 95%;
+    /* position: relative; */
+    max-width: none;
+}
+
+#wiki-wrapper.edit #wiki-content > div {
+    display: inline-block;
+    width: 47%;
+    max-width: 980px;
+    vertical-align: top;
+}
+
+#gollum-editor-format-selector {
+    display: none;
+}
+
+#gollum-editor-body + div {
+    font-size: 1em;
+}
+
+#gollum-editor #gollum-editor-preview {
+    display: none;
+}
+/* move button to right
+#gollum-editor input#gollum-editor-submit {
+    float: right;
+}
+*/
+
+</style>
+
+<script type="text/javascript">
+//<!--
+$(function(){
+    var elapsedTime = 0;
+    var previewTimeout;
+    var preview = "#gollum-preview";
+    var loading;
+
+    var makePreviewHtml = function(){
+        loading = true;
+        previewTimeout = null;
+
+        $.post('{{base_url}}/preview', {
+            "page"   : $('#gollum-editor-page-title').val(),
+            "path"   : $('#gollum-editor-page-path').val(),
+            "format" : $('#wiki_format').val(),
+            "content": $('#gollum-editor-body').val(),
+            "message": $('#gollum-editor-message-field').val()
+        }, function(data){
+            var $preview = $(data);
+            var $html = $preview.find('#wiki-body');
+            var title = $preview.find('#head h1').eq(0).html();
+            // $preview.find('#wiki-body > div').prepend("<h1>"+title+"</h1>");
+            $(preview).html('');
+            $(preview).append($html);
+
+            if (previewTimeout) {
+                // in the meantime there was another preview requested
+                previewTimeout = null;
+                loading = false;
+                updatePreview();
+            } else {
+                loading = false;
+            }
+            var currTime = new Date().getTime();
+            elapsedTime = currTime - prevTime;
+        });
+    }
+
+    function applyPreviewTimeout() {
+       if (!loading) {
+           if ( previewTimeout ) {
+               clearTimeout(previewTimeout);
+               previewTimeout = undefined;
+           }
+
+           // 3 second max delay
+           if ( elapsedTime > 3000 ) {
+               elapsedTime = 3000;
+           }
+
+           previewTimeout = setTimeout( makePreviewHtml, elapsedTime );
+       } else {
+           previewTimeout = true;
+       }
+    };
+
+    $("#gollum-editor-body").keydown(applyPreviewTimeout)
+
+    // if called directoy, format combobox is not yet ready
+    setTimeout(makePreviewHtml, 500);
+    // makePreviewHtml();
+
+    $('#gollum-preview').height($('#gollum-editor').height());
+
+    $('textarea').scroll(function(){
+        var previewScrollHeight = $('#gollum-preview').get(0).scrollHeight;
+        var textareaScrollHeight = $('#gollum-editor-body').get(0).scrollHeight;
+        $('#gollum-preview').scrollTop( $('textarea').scrollTop() * previewScrollHeight / textareaScrollHeight );
+
+    });
+});
+//-->
+</script>

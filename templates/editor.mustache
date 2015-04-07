@@ -1,73 +1,5 @@
-<div id="gollum-editor" data-escaped-name="{{escaped_name}}" class="{{#is_create_page}}create{{/is_create_page}}{{#is_edit_page}}edit{{/is_edit_page}} {{#allow_uploads}}uploads-allowed{{/allow_uploads}}">
-<style>
-#gollum-editor-preview-column {
-    width: 48%;
-    display: inline-block;
-    vertical-align: top;
-    background-color: white;
-    padding: 0.5%;
-}
-
-#gollum-editor-editor-column {
-    width: 49%;
-    display: inline-block;
-    vertical-align: top;
-}
-
-#wiki-wrapper {
-    max-width: 95%;
-}
-
-</style>
-<script type="text/javascript">
-//<!--
-$(function(){
-    var elapsedTime = 0;
-    var previewTimeout;
-    var preview = "#gollum-editor-preview-column";
-    
-    var makePreviewHtml = function(){
-        var text = $("#gollum-editor-body").val();
-
-        var prevTime = new Date().getTime();
-        alert("second");
-
-        jQuery.ajax( {
-           type: 'POST',
-           url: baseUrl + '/preview',
-           data: { page: 'Preview: ' + '{{page_name}}', format: 'rest', content: text },
-           success: function( html ) {
-               alert("third");
-               var inner_html = $(html).find('div.document').html();
-               // $(preview).html('<div class="markdown-body">'+inner_html+'</div>');
-               $(preview).html(inner_html);
-               var currTime = new Date().getTime();
-               elapsedTime = currTime - prevTime;
-               // previewWindow.document.write( html );
-               //previewWindow.focus();
-           }
-        });
-    };
-
-    var applyPreviewTimeout = function(){
-       if ( previewTimeout ) {
-           clearTimeout(previewTimeout);
-           previewTimeout = undefined;
-       }
-
-       // 3 second max delay
-       if ( elapsedTime > 3000 ) {
-           elapsedTime = 3000;
-       }
-
-       previewTimeout = setTimeout( makePreviewHtml, elapsedTime );
-    };
-
-    $("#gollum-editor-body").change(applyPreviewTimeout)
-    makePreviewHtml();
-});
-//-->
-</script>
+<div id="gollum-editor" data-escaped-name="{{escaped_name}}" class="{{#is_create_page}}create{{/is_create_page}}{{#is_edit_page}}edit{{/is_edit_page}}">
+{{>editor-preview-header}}
 {{#is_create_page}}
 <form name="gollum-editor" action="{{base_url}}/create" method="post">
 {{/is_create_page}}
@@ -124,7 +56,6 @@ $(function(){
     </div>
 
     <div id="gollum-editor-format-selector">
-      <label for="format">Edit Mode</label>
       <select id="wiki_format" name="format">
       {{#formats}}
         <option {{#selected}}selected="selected" {{/selected}}value="{{id}}">
@@ -132,6 +63,7 @@ $(function(){
         </option>
       {{/formats}}
      </select>
+      <label for="format">Edit Mode</label>
     </div>
   </div>
   <div id="gollum-editor-help" class="jaws">
@@ -156,18 +88,8 @@ $(function(){
       </div>
     </div>
   </div>
-    <div id="gollum-editor-editor-body">
-      <div id="gollum-editor-editor-column">
-        <textarea id="gollum-editor-body"
-         data-markup-lang="{{format}}" name="content" class="mousetrap">{{content}}</textarea>
-      </div>
-      <div id="gollum-editor-preview-column">
-      </div>
-    </div>
-    <div>
-      <i class="fa fa-spinner fa-spin"></i>
-      Uploading file ...
-    </div>
+    <textarea id="gollum-editor-body"
+     data-markup-lang="{{format}}" name="content" class="mousetrap">{{content}}</textarea>
 
     {{#header}}
     <div id="gollum-editor-edit-header" class="collapsed">
@@ -209,3 +131,4 @@ $(function(){
   </fieldset>
 </form>
 </div>
+{{>editor-preview}}

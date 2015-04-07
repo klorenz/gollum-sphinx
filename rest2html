@@ -96,6 +96,12 @@ class GitHubHTMLTranslator(HTMLTranslator):
         self.body.append(
                 self.starttag(node, 'table', CLASS=classes))
 
+    def visit_pending_xref(self, node):
+        pass
+
+    def depart_pending_xref(self, node):
+        pass
+
     def depart_table(self, node):
         self.body.append('</table>\n')
 
@@ -198,9 +204,14 @@ def main():
 
     confoverrides = {}
 
-    app = Sphinx(srcdir, confdir, outdir, doctreedir, "gollum",
+    try:
+        app = Sphinx(srcdir, confdir, outdir, doctreedir, "gollum",
                      confoverrides, status, warning, freshenv,
                      warningiserror, tags, verbosity, parallel)
+    except:
+        app = Sphinx(srcdir, confdir, outdir, doctreedir, "gollum",
+                     confoverrides, status, warning, freshenv,
+                     warningiserror, tags)
 
     #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
     #app.build(force_all, text)
