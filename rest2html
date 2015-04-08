@@ -44,6 +44,7 @@ except:
 
 import codecs
 
+from docutils import nodes
 from docutils.core import publish_parts
 from docutils.writers.html4css1 import Writer, HTMLTranslator
 
@@ -174,6 +175,13 @@ def main():
     doctreedir = os.environ.get('GOLLUM_SPHINX_DOCTREE_DIR', join(work_dir, "_build", "doctrees"))
     srcdir     = os.environ.get('GOLLUM_SPHINX_SRC_DIR', work_dir)
 
+    page_data = {}
+
+    header, text = text.split("\n\n", 1)
+    for line in header.splitlines(0):
+        key, val = [x.strip() for x in line.split(":", 1)]
+        page_data[key] = val
+
     os.chdir(work_dir)
 
     buildername = "gollum"
@@ -218,11 +226,21 @@ def main():
     #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
     #app.build(force_all, text)
 
+    #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
     writer = SphinxWriter(app.builder)
     #writer.translator_class = GitHubHTMLTranslator
 
     def visit_pending_xref(self, node):
-        pass
+        # TODO relative paths
+        reftarget = node.attributes['reftarget']
+        if reftarget in self.builder.env.all_docs:
+            self.body.append('<a href="%(reftarget)s.html">')
+            for n in self.builder.env.titles[reftarget].children:
+                n.walkabout(self)
+        self.body.append('</a>')
+
+        raise nodes.SkipNode
+
     def depart_pending_xref(self, node):
         pass
 
@@ -232,12 +250,11 @@ def main():
 
 #    builder = Sphinx
 #    writer = SphinxWriter()
-
+    preview_doc = (page_data['path']+page_data['page']).lstrip('/')
     settings = app.env.settings
-    settings['env'].docname = "<preview>"
-    app.env.found_docs.add('<preview>')
+    settings['env'].docname = preview_doc
+    app.env.found_docs.add(preview_doc)
 
-#    import rpdb2 ; rpdb2.start_embedded_debugger('foo')
     parts = publish_parts(text, writer=writer, settings_overrides=settings)
 
     #import rpdb2 ; rpdb2.start_embedded_debugger('foo')

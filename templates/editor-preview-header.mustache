@@ -57,6 +57,19 @@ p.gollum-error {
     color: red;
 }
 
+.system-message {
+    border: 1px solid red;
+    color: red;
+    padding: 1em;
+}
+
+.system-message p.system-message-title {
+    font-weight: bold;
+    margin-top: 0;
+}
+
+
+
 </style>
 
 <script type="text/javascript">
@@ -75,7 +88,10 @@ $(function(){
             "page"   : $('#gollum-editor-page-title').val(),
             "path"   : $('#gollum-editor-page-path').val(),
             "format" : $('#wiki_format').val(),
-            "content": $('#gollum-editor-body').val(),
+            "content": 
+                "page: "+$('#gollum-editor-page-title').val()+"\n"+
+                "path: "+$('#gollum-editor-page-path').val()+"\n\n"+
+                $('#gollum-editor-body').val(),
             "message": $('#gollum-editor-message-field').val()
         }, function(data){
             var $preview = $(data);
