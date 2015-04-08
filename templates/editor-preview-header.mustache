@@ -151,6 +151,13 @@ $(function(){
         $('#gollum-preview').scrollTop( $('textarea').scrollTop() * previewScrollHeight / textareaScrollHeight );
 
     });
+
+    $('a').each(function() {
+        var ref = $(this).attr('href');
+        if (! ref.match(/\/(history|edit)\//) ) {
+            $(this).attr('href', ref.replace(/\/wiki.*/, '/intranet'));
+        }
+    });
 });
 //-->
 </script>
