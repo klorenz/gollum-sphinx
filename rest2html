@@ -214,6 +214,7 @@ def main():
 
     confoverrides = {}
 
+    #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
     try:
         app = Sphinx(srcdir, confdir, outdir, doctreedir, "gollum",
                      confoverrides, status, warning, freshenv,
@@ -223,10 +224,8 @@ def main():
                      confoverrides, status, warning, freshenv,
                      warningiserror, tags)
 
-    #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
-    #app.build(force_all, text)
+    app.builder.imgpath = "_images"
 
-    #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
     writer = SphinxWriter(app.builder)
     #writer.translator_class = GitHubHTMLTranslator
 
@@ -234,7 +233,7 @@ def main():
         # TODO relative paths
         reftarget = node.attributes['reftarget']
         if reftarget in self.builder.env.all_docs:
-            self.body.append('<a href="%(reftarget)s.html">')
+            self.body.append('<a href="%s.html">' % reftarget)
             for n in self.builder.env.titles[reftarget].children:
                 n.walkabout(self)
         self.body.append('</a>')

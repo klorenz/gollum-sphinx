@@ -98,6 +98,11 @@ $(function(){
             var $html = $preview.find('#wiki-body');
             var title = $preview.find('#head h1').eq(0).html();
             // $preview.find('#wiki-body > div').prepend("<h1>"+title+"</h1>");
+            $preview.find('img').each(function(){
+                var ref = $(this).attr('src');
+                console.log("ref", ref);
+                $(this).attr('src', "{{base_url}}/preview-files/"+ref);
+            });
             $(preview).html('');
             $(preview).append($html);
 

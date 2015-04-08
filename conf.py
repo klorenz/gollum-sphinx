@@ -5,21 +5,35 @@ repo       = os.environ.get('GOLLUM_REPO')
 work_dir   = os.environ.get('GOLLUM_WORK_DIR', repo)
 confdir    = os.environ.get('GOLLUM_SPHINX_CONF_DIR', work_dir)
 
+#import rpdb2 ; rpdb2.start_embedded_debugger('foo')
+
 conffile = join(confdir, "conf.py")
 
 from sphinx.builders.html import StandaloneHTMLBuilder
 
+_orig_setup = None
+
+
+#
+# import symbols from original conf file manually
+#
 import imp
 with open(conffile, 'r') as config_file:
+    from sphinx.util.osutil import cd
     mod = imp.new_module("target_conf")
     mod.__file__ = conffile
-    exec(config_file, mod.__dict__)
 
+    with cd(os.path.dirname(conffile)):
+        exec(config_file, mod.__dict__)
 
-if "setup" in dir():
-    _orig_setup = setup
-else:
-    _orig_setup = None
+    sys.modules['target_conf'] = mod
+    G = globals()
+    for (k,v) in mod.__dict__.items():
+        if k not in G:
+            G[k] = v
+        if k == "setup":
+            G["_orig_setup"] = v
+
 
 class GollumBuilder(StandaloneHTMLBuilder):
     name = "gollum"
