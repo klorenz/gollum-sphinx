@@ -238,6 +238,7 @@ def main():
 
     writer = SphinxWriter(app.builder)
     #writer.translator_class = GitHubHTMLTranslator
+    writer.translator_class = SphinxHTMLTranslator
 
     def visit_pending_xref(self, node):
         # TODO relative paths
@@ -253,9 +254,37 @@ def main():
     def depart_pending_xref(self, node):
         pass
 
-    import types
+    def visit_toctree(self, node):
+        #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
+        titles = self.builder.env.titles
+
+        classes = ''
+        if 'glob' in node.attributes:
+            classes += ' toctree-glob'
+
+        if 'hidden' in node.attributes:
+            classes += ' toctree-hidden'
+
+        # TODO: maybe also handle other attributes
+
+        self.body.append('<div class="toctree"><ul class="%s">' % classes)
+
+        for entry in node.attributes['includefiles']:
+            if entry in titles:
+                self.body.append("<li>")
+                for n in titles[entry].children:
+                    n.walkabout(self)
+                self.body.append(" <code>%s</code>" % entry)
+                self.body.append("</li>")
+
+        self.body.append("</ul></div>")
+
+        raise nodes.SkipNode
+
+    # import rpdb2 ; rpdb2.start_embedded_debugger('foo')
     writer.translator_class.visit_pending_xref = visit_pending_xref
     writer.translator_class.depart_pending_xref = depart_pending_xref
+    writer.translator_class.visit_toctree = visit_toctree
 
 #    builder = Sphinx
 #    writer = SphinxWriter()

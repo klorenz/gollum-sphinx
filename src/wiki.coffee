@@ -135,6 +135,14 @@ $ ->
             color: red;
         }
 
+        #gollum-preview div.toctree {
+            border: 1px solid rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.3);
+        }
+
+        #gollum-preview div.toctree:before {
+          content: "TOCTREE";
+        }
         </style>
       """
 
