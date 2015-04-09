@@ -259,7 +259,7 @@ def main():
 
 #    builder = Sphinx
 #    writer = SphinxWriter()
-    preview_doc = (page_data['path']+page_data['page']).lstrip('/')
+    preview_doc = (page_data['path']+"/"+page_data['page']).lstrip('/')
     settings = app.env.settings
     settings['env'].docname = preview_doc
     app.env.found_docs.add(preview_doc)
