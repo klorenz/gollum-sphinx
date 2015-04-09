@@ -24,4 +24,8 @@ run-gollum:
 
 gollum-sphinx: gollum bundle
 
+_static/wiki.js: src/wiki.coffee
+	coffee -c -o _static/ $<
+
+
 .PHONY: gollum
