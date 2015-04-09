@@ -41,7 +41,7 @@ $ ->
 
     $('#gollum-editor form').submit (event) ->
       $form = $(this)
-      $.post $form.attr('action'), data: $form.serialize(), ->
+      $.post $form.attr('action'), $form.serialize(), ->
         document.location.href = document.location.pathname
       event.preventDefault()
 

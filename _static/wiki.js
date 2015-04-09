@@ -39,9 +39,7 @@ build with coffee ...
       $('#gollum-editor form').submit(function(event) {
         var $form;
         $form = $(this);
-        $.post($form.attr('action'), {
-          data: $form.serialize()
-        }, function() {
+        $.post($form.attr('action'), $form.serialize(), function() {
           return document.location.href = document.location.pathname;
         });
         return event.preventDefault();
