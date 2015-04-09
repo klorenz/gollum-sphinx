@@ -177,10 +177,20 @@ def main():
 
     page_data = {}
 
+    saving = False
     header, text = text.split("\n\n", 1)
     for line in header.splitlines(0):
-        key, val = [x.strip() for x in line.split(":", 1)]
-        page_data[key] = val
+	try:
+            key, val = [x.strip() for x in line.split(":", 1)]
+            page_data[key] = val
+        except:
+            saving = True
+
+    if saving:
+        #
+        #
+        #
+        return "<html><head></head><body><script>document.location.href = document.referrer.replace(/\?.*/, '');</script></body></html>"
 
     os.chdir(work_dir)
 

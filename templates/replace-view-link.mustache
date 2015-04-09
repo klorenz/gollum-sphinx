@@ -1,0 +1,9 @@
+<script>
+//<!--
+$(function(){
+    $('a.action-view-page').each(function(){
+        $(this).attr('href', $(this).attr('href').replace(/\/wiki(.*)/, "/intranet$1.html"));
+    });
+});
+//-->
+</script>

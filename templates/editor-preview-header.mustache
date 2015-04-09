@@ -83,6 +83,7 @@ $(function(){
     var makePreviewHtml = function(){
         loading = true;
         previewTimeout = null;
+        var prevTime = new Date().getTime();
 
         $.post('{{base_url}}/preview', {
             "page"   : $('#gollum-editor-page-title').val(),
@@ -151,13 +152,7 @@ $(function(){
         $('#gollum-preview').scrollTop( $('textarea').scrollTop() * previewScrollHeight / textareaScrollHeight );
 
     });
-
-    $('a').each(function() {
-        var ref = $(this).attr('href');
-        if (! ref.match(/\/(history|edit)\//) ) {
-            $(this).attr('href', ref.replace(/\/wiki.*/, '/intranet'));
-        }
-    });
 });
 //-->
 </script>
+{{>replace-view-link}}
