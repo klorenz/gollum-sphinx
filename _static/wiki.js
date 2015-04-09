@@ -23,7 +23,6 @@ build with coffee ...
           return $.getScript(base_url + "/javascript/gollum.dialog.js", function() {
             return $.getScript(base_url + "/javascript/gollum.placeholder.js", function() {
               return $.getScript(base_url + "/javascript/editor/gollum.editor.js", function(data) {
-                console.log(data);
                 return callback();
               });
             });
