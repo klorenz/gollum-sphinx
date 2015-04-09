@@ -39,6 +39,11 @@ $ ->
     $('div.body')
       .replaceWith $data.find('#gollum-editor')
 
+    $('#gollum-editor form').submit (event) ->
+      $form = $(this)
+      $.post $form.attr('action'), data: $form.serialize(), ->
+        document.location.href = document.location.pathname
+      event.preventDefault()
 
     $('div.bodywrapper')
         .append """<div id="gollum-preview"></div>"""
