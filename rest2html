@@ -154,7 +154,7 @@ def main():
     Usage: rest2html < README.rst
            rest2html README.rst
     """
-    #import rpdb2 ; rpdb2.start_embedded_debugger("foo")
+#    import rpdb2 ; rpdb2.start_embedded_debugger('foo')
     try:
         text = codecs.open(sys.argv[1], 'r', 'utf-8').read()
     except IOError: # given filename could not be found

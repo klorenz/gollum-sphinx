@@ -27,6 +27,7 @@ $ ->
         $.getScript "#{base_url}/javascript/gollum.dialog.js", ->
           $.getScript "#{base_url}/javascript/gollum.placeholder.js", ->
             $.getScript "#{base_url}/javascript/editor/gollum.editor.js", (data) ->
+              $.GollumEditor MarkupType: "rest"
               callback()
 
   installEditor = (data) ->
