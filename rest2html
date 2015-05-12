@@ -178,13 +178,22 @@ def main():
     page_data = {}
 
     saving = False
-    header, text = text.split("\n\n", 1)
-    for line in header.splitlines(0):
-	try:
-            key, val = [x.strip() for x in line.split(":", 1)]
-            page_data[key] = val
-        except:
-            saving = True
+
+    if text.startswith('path: '):
+        if "\n\n" in text:
+            header, text = text.split("\n\n", 1)
+        else:
+            _text = text.strip()
+            if len(_text.splitlines()) == 2:
+                header = text
+                text   = ""
+
+        for line in header.splitlines(0):
+            try:
+                key, val = [x.strip() for x in line.split(":", 1)]
+                page_data[key] = val
+            except:
+                saving = True
 
     if saving:
         #
