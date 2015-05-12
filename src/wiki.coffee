@@ -10,7 +10,9 @@ $ ->
     /^\/intranet([^\/]*\/[^\/]*)\/(.*)\.html$/,
     "/wiki$1/edit/$2"
     )
+  html_base_url = document.location.pathname.match /^\/intranet[^\/]*/
   base_url = edit_url.replace /\/edit\/.*/, ""
+  [pagePath, pageName] = edit_url.match(/\/edit((?=\/).*)\/([^\/]*)$/)[1..]
 
   window.baseUrl = base_url
 
@@ -19,12 +21,32 @@ $ ->
   loading = false
   previewDelay = 500
 
+  # from gollum.js
+  htmlEscape = (str) ->
+    String(str)
+      .replace /&/g, '&amp;'
+      .replace /"/g, '&quot;'
+      .replace /'/g, '&#39;'
+      .replace /</g, '&lt;'
+      .replace />/g, '&gt;'
+
+  # from gollum.js
+  abspath = (path, name) ->
+    if name[0] != '/'
+      name = "/#{name}"
+      if path
+        name = "/#{path}#{name}"
+    name_parts = name.split('/')
+    newPath = name_parts.slice(0, -1).join('/')
+    newName = name_parts.pop()
+    return [newPath, newName]
+
   # $.ajaxSetup cache: true
 
+  # make sure, that each script is loaded after the other
   installEditorJavascript = (callback) ->
     $.getScript "#{base_url}/javascript/mousetrap.min.js", ->
       $.getScript "#{base_url}/javascript/gollum.js", ->
-        $.getScript "#{base_url}/javascript/gollum.dialog.js", ->
           $.getScript "#{base_url}/javascript/gollum.placeholder.js", ->
             $.getScript "#{base_url}/javascript/editor/gollum.editor.js", (data) ->
               $.GollumEditor MarkupType: "rest"
@@ -54,7 +76,6 @@ $ ->
     $('head').append """
         <link rel="stylesheet" type="text/css" href="#{base_url}/css/gollum.css" media="all">
         <link rel="stylesheet" type="text/css" href="#{base_url}/css/editor.css" media="all">
-        <link rel="stylesheet" type="text/css" href="#{base_url}/css/dialog.css" media="all">
         <link rel="stylesheet" type="text/css" href="#{base_url}/css/template.css" media="all">
 
         <style>
@@ -75,7 +96,6 @@ $ ->
         div.markdown-body div.document {
           text-align: left;
         }
-
         /* copied from gollum's editor.css */
         #gollum-preview {
             overflow: auto;
@@ -149,7 +169,10 @@ $ ->
 
     $('#gollum-editor-body').keydown onEditorKeyDown
 
+
     installEditorJavascript ->
+      $('div.related a[href=#]').each ->
+        $(@).attr('href', document.location.pathname)
 
       $(window).resize ->
         height = $('div.documentwrapper').height()
@@ -215,9 +238,55 @@ $ ->
     else
       loadingPreview = true
 
-  $("ul.this-page-menu").append("""
-    <li><a href="?edit" id="edit-this-page">Edit</a></li>
-    """)
+  $('head').append """
+    <link rel="stylesheet" type="text/css" href="#{base_url}/css/dialog.css" media="all">
+    """
 
-  if document.location.search?.match /[?&]edit(&|$)/
-    $.get edit_url, installEditor
+  $.getScript "#{base_url}/javascript/gollum.dialog.js", ->
+
+    $("ul.this-page-menu").append("""
+      <li><a href="?edit" id="edit-this-page">Edit</a></li>
+      <li><a href="#" id="create-new-page">Create Page</a></li>
+      """)
+
+    if document.location.search?.match /[?&]edit(&|$)/
+      $.get edit_url, installEditor
+
+    if document.location.search?.match /[?&]create(&|$)/
+      $('#create-new-page').click()
+
+    # TODO
+    # after save, get source of index and check if current page is in
+    # toc or toc contains globs (which will become default)
+
+    $('#create-new-page').click ->
+      context_blurb = """
+        Page will be created under <span class="path">"""+
+        htmlEscape('/'+pagePath) + """</span>
+        unless an absolute path is given.
+        """
+
+      $.GollumDialog.init(
+        title: "Create New Page",
+        fields: [
+          {
+            id: 'name',
+            name: "Page Name",
+            type: "text",
+            defaultValue: "",
+            context: context_blurb
+          }
+        ]
+        OK: (res) ->
+          name = "New Page"
+          if res.name
+            name = res.name
+
+          name_encoded = []
+          name_parts = abspath(pagePath, name).join("/").split("/")
+          for n in name_parts
+            name_encoded.push encodeURIComponent n
+
+          $.get "#{base_url}/"+name_encoded.join("/"), installEditor
+
+      )
