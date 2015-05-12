@@ -179,7 +179,9 @@ def main():
 
     saving = False
 
-    if text.startswith('path: '):
+    if text.startswith('path: ') or text.startswith('page: '):
+	text = text.replace('\r', '')
+
         if "\n\n" in text:
             header, text = text.split("\n\n", 1)
         else:
