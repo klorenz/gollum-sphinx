@@ -9,10 +9,11 @@ build with coffee ...
 
 (function() {
   $(function() {
-    var abspath, base_url, displayPreview, edit_url, htmlEscape, installEditor, installEditorJavascript, loadPreview, loading, loadingPreview, onEditorKeyDown, pageName, pagePath, preview, previewDelay, ref1;
-    edit_url = document.location.pathname.replace(/^\/intranet([^\/]*\/[^\/]*)\/(.*)\.html$/, "/wiki$1/edit/$2");
-    base_url = edit_url.replace(/\/edit\/.*/, "");
-    ref1 = edit_url.match(/\/edit((?=\/).*)\/([^\/]*)$/).slice(1), pagePath = ref1[0], pageName = ref1[1];
+    var abspath, base_url, displayPreview, edit_url, htmlEscape, html_base_url, installEditor, installEditorJavascript, loadPreview, loading, loadingPreview, onEditorKeyDown, pageName, pagePath, preview, previewDelay, ref1;
+    edit_url = document.location.pathname.replace(/^\/intranet([^\/]*\/[^\/]*)\/(.*)\.html$/, "/wiki$1/(edit|create)/$2");
+    html_base_url = document.location.pathname.match(/^\/intranet[^\/]*/);
+    base_url = edit_url.replace(/\/(edit|create)\/.*/, "");
+    ref1 = edit_url.match(/\/(edit|create)((?=\/).*)\/([^\/]*)$/).slice(2), pagePath = ref1[0], pageName = ref1[1];
     window.baseUrl = base_url;
     loadingPreview = null;
     preview = "#gollum-preview";
@@ -63,9 +64,12 @@ build with coffee ...
       });
       $('div.bodywrapper').append("<div id=\"gollum-preview\"></div>");
       $('div.bodywrapper').prepend("<ul class=\"actions\"><li class=\"minibutton\"><a href=\"" + document.location.pathname + "\">View Page</a></li>");
-      $('head').append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/gollum.css\" media=\"all\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/editor.css\" media=\"all\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/template.css\" media=\"all\">\n\n<style>\ndiv.documentwrapper {\n  position: absolute;\n  top: 3em;\n  bottom: 3em;\n  width: 95%;\n  left: 2.5%;\n}\n\ndiv.bodywrapper > div {\n  display: inline-block;\n  vertical-align: top;\n  width: 48%;\n}\n\ndiv.markdown-body div.document {\n  text-align: left;\n}\n\n/* copied from gollum's editor.css */\n#gollum-preview {\n    overflow: auto;\n}\n#gollum-editor {\n}\n.ff #gollum-preview, .ie #gollum-preview {\n    padding-bottom: 1em;\n}\n\n#gollum-preview {\n/*    border: 1px solid #E4E4E4;\n    background: none repeat scroll 0% 0% #F9F9F9;\n    border-radius: 1em;\n*/\n    margin: 1em 0px 5em;\n}\n#gollum-preview {\n    padding: 0em 1em 0.4em;\n}\n\n/* now own ones */\n\n\n#wiki-wrapper.edit {\n    width: 95%;\n    /* position: relative; */\n    max-width: none;\n}\n\n#wiki-wrapper.edit #wiki-content > div {\n    display: inline-block;\n    width: 47%;\n    max-width: 980px;\n    vertical-align: top;\n}\n\n#gollum-editor-format-selector {\n    display: none;\n}\n\n#gollum-editor-body + div {\n    font-size: 1em;\n}\n\n#gollum-editor #gollum-editor-preview {\n    display: none;\n}\n/* move button to right\n#gollum-editor input#gollum-editor-submit {\n    float: right;\n}\n*/\n\np.gollum-error {\n    font-family: monospace;\n    white-space: pre;\n    color: red;\n}\n\n#gollum-preview div.toctree {\n    border: 1px solid rgba(0,0,0,0.7);\n    background: rgba(0,0,0,0.3);\n}\n\n#gollum-preview div.toctree:before {\n  content: \"TOCTREE\";\n}\n</style>");
+      $('head').append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/gollum.css\" media=\"all\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/editor.css\" media=\"all\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/template.css\" media=\"all\">\n\n<style>\ndiv.documentwrapper {\n  position: absolute;\n  top: 3em;\n  bottom: 3em;\n  width: 95%;\n  left: 2.5%;\n}\n\ndiv.bodywrapper > div {\n  display: inline-block;\n  vertical-align: top;\n  width: 48%;\n}\n\ndiv.markdown-body div.document {\n  text-align: left;\n}\n/* copied from gollum's editor.css */\n#gollum-preview {\n    overflow: auto;\n}\n#gollum-editor {\n}\n.ff #gollum-preview, .ie #gollum-preview {\n    padding-bottom: 1em;\n}\n\n#gollum-preview {\n/*    border: 1px solid #E4E4E4;\n    background: none repeat scroll 0% 0% #F9F9F9;\n    border-radius: 1em;\n*/\n    margin: 1em 0px 5em;\n}\n#gollum-preview {\n    padding: 0em 1em 0.4em;\n}\n\n/* now own ones */\n\n\n#wiki-wrapper.edit {\n    width: 95%;\n    /* position: relative; */\n    max-width: none;\n}\n\n#wiki-wrapper.edit #wiki-content > div {\n    display: inline-block;\n    width: 47%;\n    max-width: 980px;\n    vertical-align: top;\n}\n\n#gollum-editor-format-selector {\n    display: none;\n}\n\n#gollum-editor-body + div {\n    font-size: 1em;\n}\n\n#gollum-editor #gollum-editor-preview {\n    display: none;\n}\n/* move button to right\n#gollum-editor input#gollum-editor-submit {\n    float: right;\n}\n*/\n\np.gollum-error {\n    font-family: monospace;\n    white-space: pre;\n    color: red;\n}\n\n#gollum-preview div.toctree {\n    border: 1px solid rgba(0,0,0,0.7);\n    background: rgba(0,0,0,0.3);\n}\n\n#gollum-preview div.toctree:before {\n  content: \"TOCTREE\";\n}\n</style>");
       $('#gollum-editor-body').keydown(onEditorKeyDown);
       return installEditorJavascript(function() {
+        $('div.related a[href=#]').each(function() {
+          return $(this).attr('href', document.location.pathname);
+        });
         $(window).resize(function() {
           var height;
           height = $('div.documentwrapper').height();
@@ -90,7 +94,7 @@ build with coffee ...
       return $.post(base_url + "/preview", {
         page: page,
         path: path,
-        format: $('#wiki_format').val(),
+        format: $('#wiki_format').val() || "rest",
         content: "page: " + page + "\npath: " + path + "\n\n" + body
       }, displayPreview);
     };
@@ -145,7 +149,7 @@ build with coffee ...
               name: "Page Name",
               type: "text",
               defaultValue: "",
-              context: "Page will be created under <span class=\"path\">"
+              context: context_blurb
             }
           ],
           OK: function(res) {

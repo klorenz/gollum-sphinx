@@ -8,11 +8,11 @@ build with coffee ...
 $ ->
   edit_url = document.location.pathname.replace(
     /^\/intranet([^\/]*\/[^\/]*)\/(.*)\.html$/,
-    "/wiki$1/edit/$2"
+    "/wiki$1/(edit|create)/$2"
     )
   html_base_url = document.location.pathname.match /^\/intranet[^\/]*/
-  base_url = edit_url.replace /\/edit\/.*/, ""
-  [pagePath, pageName] = edit_url.match(/\/edit((?=\/).*)\/([^\/]*)$/)[1..]
+  base_url = edit_url.replace /\/(edit|create)\/.*/, ""
+  [pagePath, pageName] = edit_url.match(/\/(edit|create)((?=\/).*)\/([^\/]*)$/)[2..]
 
   window.baseUrl = base_url
 
@@ -197,7 +197,7 @@ $ ->
     $.post "#{base_url}/preview", {
       page   : page
       path   : path
-      format : $('#wiki_format').val()
+      format : $('#wiki_format').val() or "rest"
       content : """
         page: #{page}
         path: #{path}
