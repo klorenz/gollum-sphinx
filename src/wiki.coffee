@@ -8,18 +8,18 @@ build with coffee ...
 $ ->
   edit_url = document.location.pathname.replace(
     /^\/intranet([^\/]*\/[^\/]*)\/(.*)\.html$/,
-    "/wiki$1/(edit|create)/$2"
+    "/wiki$1/edit/$2"
     )
   html_base_url = document.location.pathname.match /^\/intranet[^\/]*/
-  base_url = edit_url.replace /\/(edit|create)\/.*/, ""
-  [pagePath, pageName] = edit_url.match(/\/(edit|create)((?=\/).*)\/([^\/]*)$/)[2..]
+  base_url = edit_url.replace /\/edit\/.*/, ""
+  [pagePath, pageName] = edit_url.match(/\/edit((?=\/).*)\/([^\/]*)$/)[1..]
 
   window.baseUrl = base_url
 
   loadingPreview = null
   preview = "#gollum-preview"
   loading = false
-  previewDelay = 500
+  previewDelay = 1000
 
   # from gollum.js
   htmlEscape = (str) ->
@@ -52,14 +52,20 @@ $ ->
               $.GollumEditor MarkupType: "rest"
               callback()
 
+  # install the editor in current page
   installEditor = (data) ->
     $data = $ data
     # header = data.match(/<head>([\s\S]*)<\/head>/)[1]
 
     $('div.sphinxsidebar').remove()
 
+#    $('div.body')
+#      .replaceWith $data.find('#gollum-editor')
+
     $('div.body')
-      .replaceWith $data.find('#gollum-editor')
+      .replaceWith '<div><div id="gollum-sphinx-wrapper"></div></div>'
+
+    $('#gollum-sphinx-wrapper').append $data.find('#gollum-editor')
 
     $('#gollum-editor form').submit (event) ->
       $form = $(this)
@@ -67,8 +73,8 @@ $ ->
         document.location.href = document.location.pathname
       event.preventDefault()
 
-    $('div.bodywrapper')
-        .append """<div id="gollum-preview"></div>"""
+    $('#gollum-sphinx-wrapper')
+        .append """<div id="gollum-preview" class="markdown-body"></div>"""
 
     $('div.bodywrapper')
         .prepend """<ul class="actions"><li class="minibutton"><a href="#{document.location.pathname}">View Page</a></li>"""
@@ -87,18 +93,27 @@ $ ->
           left: 2.5%;
         }
 
-        div.bodywrapper > div {
-          display: inline-block;
-          vertical-align: top;
-          width: 48%;
-        }
-
         div.markdown-body div.document {
           text-align: left;
+          padding: 0em 1em 0.4em;
         }
+
+        #gollum-sphinx-wrapper {
+          text-align: center;
+        }
+
+        #gollum-sphinx-wrapper > div {
+          text-align: left;
+          display: inline-block;
+          vertical-align: top;
+          width: 45%;
+        }
+
         /* copied from gollum's editor.css */
-        #gollum-preview {
+        #gollum-preview > .document {
             overflow: auto;
+            background-color: white;
+            border: 1px solid #DDD;
         }
         #gollum-editor {
         }
@@ -107,14 +122,13 @@ $ ->
         }
 
         #gollum-preview {
-        /*    border: 1px solid #E4E4E4;
-            background: none repeat scroll 0% 0% #F9F9F9;
-            border-radius: 1em;
-        */
             margin: 1em 0px 5em;
-        }
-        #gollum-preview {
-            padding: 0em 1em 0.4em;
+            border: 1px solid #E4E4E4;
+            background: #F9F9F9 none repeat scroll 0% 0%;
+            margin: 1em 0px 5em;
+            border-radius: 1em;
+            /* padding: 0em 1em 0.4em; */
+            padding: 1em;
         }
 
         /* now own ones */
@@ -128,7 +142,7 @@ $ ->
 
         #wiki-wrapper.edit #wiki-content > div {
             display: inline-block;
-            width: 47%;
+            width: 45%;
             max-width: 980px;
             vertical-align: top;
         }
@@ -176,28 +190,47 @@ $ ->
 
       $(window).resize ->
         height = $('div.documentwrapper').height()
+        width = $('div.documentwrapper').width()
+        marginLeft = Math.ceil(width/100)
+        
         $('textarea').height(height*2/3);
-        $('#gollum-preview').height($('#gollum-editor').height());
+        $('#gollum-preview').outerHeight($('#gollum-editor').outerHeight())
+        $('#gollum-preview').css('borderTopLeftRadius', $('#gollum-editor').css('borderTopLeftRadius'))
+        $('#gollum-preview').css('borderTopRightRadius', $('#gollum-editor').css('borderTopRightRadius'))
+        $('#gollum-preview').css('borderBottomLeftRadius', $('#gollum-editor').css('borderBottomLeftRadius'))
+        $('#gollum-preview').css('borderBottomRightRadius', $('#gollum-editor').css('borderBottomRightRadius'))
+        $('#gollum-preview > .document').outerHeight($('#gollum-preview').height())
 
-      $(window).resize()
+        $('#gollum-preview').css('marginLeft', marginLeft)
+
+        halfWidth = Math.floor((width - marginLeft)/2) - 2
+
+        $('#gollum-preview, #gollum-editor').outerWidth( halfWidth )
+        console.log "width #{width}, halfWidth #{halfWidth}, marginLeft #{marginLeft}"
 
       $('textarea').scroll ->
-        previewScrollHeight = $('#gollum-preview').get(0).scrollHeight;
-        textareaScrollHeight = $('#gollum-editor-body').get(0).scrollHeight;
-        $('#gollum-preview').scrollTop( $('textarea').scrollTop() * previewScrollHeight / textareaScrollHeight );
+        previewScrollHeight = $('#gollum-preview > .document')[0].scrollHeight;
+        textareaScrollHeight = $('#gollum-editor-body')[0].scrollHeight;
+        $('#gollum-preview > .document').scrollTop( $('textarea').scrollTop() * previewScrollHeight / textareaScrollHeight );
 
       loadPreview()
 
 
-  loadPreview = ->
-    page = $('#gollum-editor-page-title').val()
-    path = $('#gollum-editor-page-path').val()
-    body = $('#gollum-editor-body').val()
+  # load preview of given page, path, body in format
+  # format defaults to restructured text
+  # if nothing given data is taken from editor form
+  loadPreview = (page, path, body, format)->
+    page ?= $('#gollum-editor-page-title').val()
+    path ?= $('#gollum-editor-page-path').val()
+    body ?= $('#gollum-editor-body').val()
+    format ?= $('#wiki_format').val() or "rest"
+
+    loading = true
 
     $.post "#{base_url}/preview", {
       page   : page
       path   : path
-      format : $('#wiki_format').val() or "rest"
+      format : format
       content : """
         page: #{page}
         path: #{path}
@@ -206,18 +239,31 @@ $ ->
         """
       }, displayPreview
 
-  displayPreview = (data) ->
+  showPreview = (selector, data) ->
     $preview = $ data
-    $html = $preview.find('#wiki-body')
-    title = $preview.find('#head h1').eq(0).html()
+    $html  = $preview
+
+    #$html = $preview.find('#wiki-body')
+    #title = $preview.find('#head h1').eq(0).html()
 
     $preview.find('img').each ->
       ref = $(this).attr 'src'
       $(this).attr('src', "#{base_url}/preview-files/#{ref}")
 
-    $(preview)
+    $preview.find('object').each ->
+      data = $(this).attr 'data'
+      if data.match /^_images/
+         $(this).attr('data', "#{base_url}/preview-files/#{data}")
+
+    $(selector)
       .html('')
       .append($html)
+
+  # diesplay a preview in
+  displayPreview = (data) ->
+    showPreview(preview, data)
+
+    $(window).resize()
 
     if loadingPreview
       # in the meantime there was another preview requested
@@ -242,51 +288,160 @@ $ ->
     <link rel="stylesheet" type="text/css" href="#{base_url}/css/dialog.css" media="all">
     """
 
-  $.getScript "#{base_url}/javascript/gollum.dialog.js", ->
+  $('div.related a[href=#]').each ->
+    $(this).attr('href', document.location)
 
-    $("ul.this-page-menu").append("""
-      <li><a href="?edit" id="edit-this-page">Edit</a></li>
-      <li><a href="#" id="create-new-page">Create Page</a></li>
-      """)
+  ###
+  If editable is accessible, wiki is accessible, if it returns {editable: true}, wiki
+  is also editable.
+  ###
+  $.getJSON "#{base_url}/json/editable", (data) ->
 
-    if document.location.search?.match /[?&]edit(&|$)/
-      $.get edit_url, installEditor
+    # if editable, display Edit and Create Page links
+    if data.editable
+      $("ul.this-page-menu").append("""
+        <li><a href="?edit" id="edit-this-page">Edit</a></li>
+        <li><a href="#" id="create-new-page">Create Page</a></li>
+        """)
 
-    if document.location.search?.match /[?&]create(&|$)/
-      $('#create-new-page').click()
+      $.getScript "#{base_url}/javascript/gollum.dialog.js", ->
 
-    # TODO
-    # after save, get source of index and check if current page is in
-    # toc or toc contains globs (which will become default)
+        if document.location.search?.match /[?&]edit(&|$)/
+          $.get edit_url, installEditor
 
-    $('#create-new-page').click ->
-      context_blurb = """
-        Page will be created under <span class="path">"""+
-        htmlEscape('/'+pagePath) + """</span>
-        unless an absolute path is given.
-        """
+        if document.location.search?.match /[?&]create(&|$)/
+          $('#create-new-page').click()
 
-      $.GollumDialog.init(
-        title: "Create New Page",
-        fields: [
-          {
-            id: 'name',
-            name: "Page Name",
-            type: "text",
-            defaultValue: "",
-            context: context_blurb
-          }
-        ]
-        OK: (res) ->
-          name = "New Page"
-          if res.name
-            name = res.name
+        # TODO
+        # after save, get source of index and check if current page is in
+        # toc or toc contains globs (which will become default)
 
-          name_encoded = []
-          name_parts = abspath(pagePath, name).join("/").split("/")
-          for n in name_parts
-            name_encoded.push encodeURIComponent n
+        $('#create-new-page').click ->
+          context_blurb = """
+            Page will be created under <span class="path">"""+
+            htmlEscape('/'+pagePath) + """</span>
+            unless an absolute path is given.
+            """
 
-          $.get "#{base_url}/"+name_encoded.join("/"), installEditor
+          $.GollumDialog.init(
+            title: "Create New Page",
+            fields: [
+              {
+                id: 'name',
+                name: "Page Name",
+                type: "text",
+                defaultValue: "",
+                context: context_blurb
+              }
+            ]
+            OK: (res) ->
+              name = "New Page"
+              if res.name
+                name = res.name
 
-      )
+              name_encoded = []
+              name_parts = abspath(pagePath, name).join("/").split("/")
+              for n in name_parts
+                name_encoded.push encodeURIComponent n
+
+              $.get "#{base_url}/"+name_encoded.join("/"), installEditor
+
+          )
+
+    renderCommitInfo = (entry) ->
+      {id, id7, message, author} = entry
+      """
+        <div class="commit">
+          <div class="commit-row-title">
+            <a href="?rev=#{id}" class="id_short">#{id7}</a>
+            <a href="?rev=#{id}" class="message">#{message}</a>
+          </div>
+          <div class="commit-row-info">
+            <span class="author">#{author}</span>
+          </div>
+        </div>
+      """
+
+    # display history link
+    $('ul.this-page-menu').append('''
+      <li><a href="?history" id="this-page-history">History</a></li>
+    ''')
+
+    # handle history link
+    last = (array) -> array[array.length-1]
+    if document.location.search?.match /[?&]history(&|$)/
+      $.getJSON "#{base_url}/json/history#{pagePath}/#{pageName}", (data) ->
+        title = $('h1').eq(0).text().replace /.$/, ''   # remove paragraph endline char
+        $('div.documentwrapper > div.bodywrapper > div.body').html("""
+          <h1>History for <b>#{pageName}</b></h1>
+          <div id="history"></div>
+          """);
+
+        changes_per_date = []
+
+        for rec in data
+          {date} = rec
+
+          if changes_per_date.length
+            last_entry = last(changes_per_date)
+            if last_entry.date == date
+              last_entry.entries.push rec
+            else
+              changes_per_date.push { date, entries: [ rec ]}
+          else
+            changes_per_date.push { date, entries: [ rec ]}
+
+        for date_rec in changes_per_date
+           {date, entries} = date_rec
+           $('#history').append("<h2>#{date}</h2><ul></ul>")
+
+           $ul = $('#history > ul').last()
+           for entry in entries
+             $ul.append "<li>" + renderCommitInfo(entry) + "</li>"
+
+
+    if m = document.location.search?.match /\?rev=([^&]*)/
+      version = m[1]
+      $('div.documentwrapper > div.bodywrapper > div.body')
+      .html """
+          <div class="loading">
+            <img src="#{DOCUMENTATION_OPTIONS.URL_ROOT}_static/mw-48x48-transparent-bg-white-loadinfo.net.gif">
+            <div class="loading-text">loading ...</div>
+          </div>
+      """
+      $.getJSON "#{base_url}/json/data#{pagePath}/#{pageName}/#{version}", (versionInfo) ->
+
+        $.post "#{base_url}/preview", {
+          page   : pageName
+          path   : pagePath
+          format : 'rest'
+          content : """
+            page: #{pageName}
+            path: #{pagePath}
+
+            #{versionInfo.data}
+            """
+          }, (data) ->
+              {id, id7, message, author, date} = versionInfo
+              orig = document.location.pathname
+
+              $('div.documentwrapper > div.bodywrapper > div.body')
+              .html('')
+              .append("""
+                <h1>#{pageName} as of #{date} (#{id7})</h1>
+
+                <div id="wiki-page-info">
+                  <table class="page-info"><tbody>
+                    <tr> <th>Date</th> <td>#{date}</td> </tr>
+                    <tr> <th>Author</th> <td>#{author}</td> </tr>
+                    <tr> <th>ID</th> <td>#{id}</td> </tr>
+                    <tr> <th>Message</th> <td>#{message}</td> </tr>
+                  </tbody></table>
+                </div>
+
+                <div><a href="#{orig}">Back to current version</a></div>
+
+                <div id="wiki-review"></div>
+                """)
+
+              showPreview '#wiki-review', data

@@ -9,16 +9,16 @@ build with coffee ...
 
 (function() {
   $(function() {
-    var abspath, base_url, displayPreview, edit_url, htmlEscape, html_base_url, installEditor, installEditorJavascript, loadPreview, loading, loadingPreview, onEditorKeyDown, pageName, pagePath, preview, previewDelay, ref1;
-    edit_url = document.location.pathname.replace(/^\/intranet([^\/]*\/[^\/]*)\/(.*)\.html$/, "/wiki$1/(edit|create)/$2");
+    var abspath, base_url, displayPreview, edit_url, htmlEscape, html_base_url, installEditor, installEditorJavascript, loadPreview, loading, loadingPreview, onEditorKeyDown, pageName, pagePath, preview, previewDelay, ref1, showPreview;
+    edit_url = document.location.pathname.replace(/^\/intranet([^\/]*\/[^\/]*)\/(.*)\.html$/, "/wiki$1/edit/$2");
     html_base_url = document.location.pathname.match(/^\/intranet[^\/]*/);
-    base_url = edit_url.replace(/\/(edit|create)\/.*/, "");
-    ref1 = edit_url.match(/\/(edit|create)((?=\/).*)\/([^\/]*)$/).slice(2), pagePath = ref1[0], pageName = ref1[1];
+    base_url = edit_url.replace(/\/edit\/.*/, "");
+    ref1 = edit_url.match(/\/edit((?=\/).*)\/([^\/]*)$/).slice(1), pagePath = ref1[0], pageName = ref1[1];
     window.baseUrl = base_url;
     loadingPreview = null;
     preview = "#gollum-preview";
     loading = false;
-    previewDelay = 500;
+    previewDelay = 1000;
     htmlEscape = function(str) {
       return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     };
@@ -53,7 +53,8 @@ build with coffee ...
       var $data;
       $data = $(data);
       $('div.sphinxsidebar').remove();
-      $('div.body').replaceWith($data.find('#gollum-editor'));
+      $('div.body').replaceWith('<div><div id="gollum-sphinx-wrapper"></div></div>');
+      $('#gollum-sphinx-wrapper').append($data.find('#gollum-editor'));
       $('#gollum-editor form').submit(function(event) {
         var $form;
         $form = $(this);
@@ -62,53 +63,81 @@ build with coffee ...
         });
         return event.preventDefault();
       });
-      $('div.bodywrapper').append("<div id=\"gollum-preview\"></div>");
+      $('#gollum-sphinx-wrapper').append("<div id=\"gollum-preview\" class=\"markdown-body\"></div>");
       $('div.bodywrapper').prepend("<ul class=\"actions\"><li class=\"minibutton\"><a href=\"" + document.location.pathname + "\">View Page</a></li>");
-      $('head').append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/gollum.css\" media=\"all\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/editor.css\" media=\"all\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/template.css\" media=\"all\">\n\n<style>\ndiv.documentwrapper {\n  position: absolute;\n  top: 3em;\n  bottom: 3em;\n  width: 95%;\n  left: 2.5%;\n}\n\ndiv.bodywrapper > div {\n  display: inline-block;\n  vertical-align: top;\n  width: 48%;\n}\n\ndiv.markdown-body div.document {\n  text-align: left;\n}\n/* copied from gollum's editor.css */\n#gollum-preview {\n    overflow: auto;\n}\n#gollum-editor {\n}\n.ff #gollum-preview, .ie #gollum-preview {\n    padding-bottom: 1em;\n}\n\n#gollum-preview {\n/*    border: 1px solid #E4E4E4;\n    background: none repeat scroll 0% 0% #F9F9F9;\n    border-radius: 1em;\n*/\n    margin: 1em 0px 5em;\n}\n#gollum-preview {\n    padding: 0em 1em 0.4em;\n}\n\n/* now own ones */\n\n\n#wiki-wrapper.edit {\n    width: 95%;\n    /* position: relative; */\n    max-width: none;\n}\n\n#wiki-wrapper.edit #wiki-content > div {\n    display: inline-block;\n    width: 47%;\n    max-width: 980px;\n    vertical-align: top;\n}\n\n#gollum-editor-format-selector {\n    display: none;\n}\n\n#gollum-editor-body + div {\n    font-size: 1em;\n}\n\n#gollum-editor #gollum-editor-preview {\n    display: none;\n}\n/* move button to right\n#gollum-editor input#gollum-editor-submit {\n    float: right;\n}\n*/\n\np.gollum-error {\n    font-family: monospace;\n    white-space: pre;\n    color: red;\n}\n\n#gollum-preview div.toctree {\n    border: 1px solid rgba(0,0,0,0.7);\n    background: rgba(0,0,0,0.3);\n}\n\n#gollum-preview div.toctree:before {\n  content: \"TOCTREE\";\n}\n</style>");
+      $('head').append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/gollum.css\" media=\"all\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/editor.css\" media=\"all\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/template.css\" media=\"all\">\n\n<style>\ndiv.documentwrapper {\n  position: absolute;\n  top: 3em;\n  bottom: 3em;\n  width: 95%;\n  left: 2.5%;\n}\n\ndiv.markdown-body div.document {\n  text-align: left;\n  padding: 0em 1em 0.4em;\n}\n\n#gollum-sphinx-wrapper {\n  text-align: center;\n}\n\n#gollum-sphinx-wrapper > div {\n  text-align: left;\n  display: inline-block;\n  vertical-align: top;\n  width: 45%;\n}\n\n/* copied from gollum's editor.css */\n#gollum-preview > .document {\n    overflow: auto;\n    background-color: white;\n    border: 1px solid #DDD;\n}\n#gollum-editor {\n}\n.ff #gollum-preview, .ie #gollum-preview {\n    padding-bottom: 1em;\n}\n\n#gollum-preview {\n    margin: 1em 0px 5em;\n    border: 1px solid #E4E4E4;\n    background: #F9F9F9 none repeat scroll 0% 0%;\n    margin: 1em 0px 5em;\n    border-radius: 1em;\n    /* padding: 0em 1em 0.4em; */\n    padding: 1em;\n}\n\n/* now own ones */\n\n\n#wiki-wrapper.edit {\n    width: 95%;\n    /* position: relative; */\n    max-width: none;\n}\n\n#wiki-wrapper.edit #wiki-content > div {\n    display: inline-block;\n    width: 45%;\n    max-width: 980px;\n    vertical-align: top;\n}\n\n#gollum-editor-format-selector {\n    display: none;\n}\n\n#gollum-editor-body + div {\n    font-size: 1em;\n}\n\n#gollum-editor #gollum-editor-preview {\n    display: none;\n}\n/* move button to right\n#gollum-editor input#gollum-editor-submit {\n    float: right;\n}\n*/\n\np.gollum-error {\n    font-family: monospace;\n    white-space: pre;\n    color: red;\n}\n\n#gollum-preview div.toctree {\n    border: 1px solid rgba(0,0,0,0.7);\n    background: rgba(0,0,0,0.3);\n}\n\n#gollum-preview div.toctree:before {\n  content: \"TOCTREE\";\n}\n</style>");
       $('#gollum-editor-body').keydown(onEditorKeyDown);
       return installEditorJavascript(function() {
         $('div.related a[href=#]').each(function() {
           return $(this).attr('href', document.location.pathname);
         });
         $(window).resize(function() {
-          var height;
+          var halfWidth, height, marginLeft, width;
           height = $('div.documentwrapper').height();
+          width = $('div.documentwrapper').width();
+          marginLeft = Math.ceil(width / 100);
           $('textarea').height(height * 2 / 3);
-          return $('#gollum-preview').height($('#gollum-editor').height());
+          $('#gollum-preview').outerHeight($('#gollum-editor').outerHeight());
+          $('#gollum-preview').css('borderTopLeftRadius', $('#gollum-editor').css('borderTopLeftRadius'));
+          $('#gollum-preview').css('borderTopRightRadius', $('#gollum-editor').css('borderTopRightRadius'));
+          $('#gollum-preview').css('borderBottomLeftRadius', $('#gollum-editor').css('borderBottomLeftRadius'));
+          $('#gollum-preview').css('borderBottomRightRadius', $('#gollum-editor').css('borderBottomRightRadius'));
+          $('#gollum-preview > .document').outerHeight($('#gollum-preview').height());
+          $('#gollum-preview').css('marginLeft', marginLeft);
+          halfWidth = Math.floor((width - marginLeft) / 2) - 2;
+          $('#gollum-preview, #gollum-editor').outerWidth(halfWidth);
+          return console.log("width " + width + ", halfWidth " + halfWidth + ", marginLeft " + marginLeft);
         });
-        $(window).resize();
         $('textarea').scroll(function() {
           var previewScrollHeight, textareaScrollHeight;
-          previewScrollHeight = $('#gollum-preview').get(0).scrollHeight;
-          textareaScrollHeight = $('#gollum-editor-body').get(0).scrollHeight;
-          return $('#gollum-preview').scrollTop($('textarea').scrollTop() * previewScrollHeight / textareaScrollHeight);
+          previewScrollHeight = $('#gollum-preview > .document')[0].scrollHeight;
+          textareaScrollHeight = $('#gollum-editor-body')[0].scrollHeight;
+          return $('#gollum-preview > .document').scrollTop($('textarea').scrollTop() * previewScrollHeight / textareaScrollHeight);
         });
         return loadPreview();
       });
     };
-    loadPreview = function() {
-      var body, page, path;
-      page = $('#gollum-editor-page-title').val();
-      path = $('#gollum-editor-page-path').val();
-      body = $('#gollum-editor-body').val();
+    loadPreview = function(page, path, body, format) {
+      if (page == null) {
+        page = $('#gollum-editor-page-title').val();
+      }
+      if (path == null) {
+        path = $('#gollum-editor-page-path').val();
+      }
+      if (body == null) {
+        body = $('#gollum-editor-body').val();
+      }
+      if (format == null) {
+        format = $('#wiki_format').val() || "rest";
+      }
+      loading = true;
       return $.post(base_url + "/preview", {
         page: page,
         path: path,
-        format: $('#wiki_format').val() || "rest",
+        format: format,
         content: "page: " + page + "\npath: " + path + "\n\n" + body
       }, displayPreview);
     };
-    displayPreview = function(data) {
-      var $html, $preview, title;
+    showPreview = function(selector, data) {
+      var $html, $preview;
       $preview = $(data);
-      $html = $preview.find('#wiki-body');
-      title = $preview.find('#head h1').eq(0).html();
+      $html = $preview;
       $preview.find('img').each(function() {
         var ref;
         ref = $(this).attr('src');
         return $(this).attr('src', base_url + "/preview-files/" + ref);
       });
-      $(preview).html('').append($html);
+      $preview.find('object').each(function() {
+        data = $(this).attr('data');
+        if (data.match(/^_images/)) {
+          return $(this).attr('data', base_url + "/preview-files/" + data);
+        }
+      });
+      return $(selector).html('').append($html);
+    };
+    displayPreview = function(data) {
+      showPreview(preview, data);
+      $(window).resize();
       if (loadingPreview) {
         loadingPreview = null;
         loading = false;
@@ -129,45 +158,130 @@ build with coffee ...
       }
     };
     $('head').append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/dialog.css\" media=\"all\">");
-    return $.getScript(base_url + "/javascript/gollum.dialog.js", function() {
-      var ref2, ref3;
-      $("ul.this-page-menu").append("<li><a href=\"?edit\" id=\"edit-this-page\">Edit</a></li>\n<li><a href=\"#\" id=\"create-new-page\">Create Page</a></li>");
-      if ((ref2 = document.location.search) != null ? ref2.match(/[?&]edit(&|$)/) : void 0) {
-        $.get(edit_url, installEditor);
-      }
-      if ((ref3 = document.location.search) != null ? ref3.match(/[?&]create(&|$)/) : void 0) {
-        $('#create-new-page').click();
-      }
-      return $('#create-new-page').click(function() {
-        var context_blurb;
-        context_blurb = "Page will be created under <span class=\"path\">" + htmlEscape('/' + pagePath) + "</span>\nunless an absolute path is given.";
-        return $.GollumDialog.init({
-          title: "Create New Page",
-          fields: [
-            {
-              id: 'name',
-              name: "Page Name",
-              type: "text",
-              defaultValue: "",
-              context: context_blurb
-            }
-          ],
-          OK: function(res) {
-            var i, len, n, name, name_encoded, name_parts;
-            name = "New Page";
-            if (res.name) {
-              name = res.name;
-            }
-            name_encoded = [];
-            name_parts = abspath(pagePath, name).join("/").split("/");
-            for (i = 0, len = name_parts.length; i < len; i++) {
-              n = name_parts[i];
-              name_encoded.push(encodeURIComponent(n));
-            }
-            return $.get((base_url + "/") + name_encoded.join("/"), installEditor);
+    $('div.related a[href=#]').each(function() {
+      return $(this).attr('href', document.location);
+    });
+
+    /*
+    If editable is accessible, wiki is accessible, if it returns {editable: true}, wiki
+    is also editable.
+     */
+    return $.getJSON(base_url + "/json/editable", function(data) {
+      var last, m, ref2, ref3, renderCommitInfo, version;
+      if (data.editable) {
+        $("ul.this-page-menu").append("<li><a href=\"?edit\" id=\"edit-this-page\">Edit</a></li>\n<li><a href=\"#\" id=\"create-new-page\">Create Page</a></li>");
+        $.getScript(base_url + "/javascript/gollum.dialog.js", function() {
+          var ref2, ref3;
+          if ((ref2 = document.location.search) != null ? ref2.match(/[?&]edit(&|$)/) : void 0) {
+            $.get(edit_url, installEditor);
           }
+          if ((ref3 = document.location.search) != null ? ref3.match(/[?&]create(&|$)/) : void 0) {
+            $('#create-new-page').click();
+          }
+          return $('#create-new-page').click(function() {
+            var context_blurb;
+            context_blurb = "Page will be created under <span class=\"path\">" + htmlEscape('/' + pagePath) + "</span>\nunless an absolute path is given.";
+            return $.GollumDialog.init({
+              title: "Create New Page",
+              fields: [
+                {
+                  id: 'name',
+                  name: "Page Name",
+                  type: "text",
+                  defaultValue: "",
+                  context: context_blurb
+                }
+              ],
+              OK: function(res) {
+                var i, len, n, name, name_encoded, name_parts;
+                name = "New Page";
+                if (res.name) {
+                  name = res.name;
+                }
+                name_encoded = [];
+                name_parts = abspath(pagePath, name).join("/").split("/");
+                for (i = 0, len = name_parts.length; i < len; i++) {
+                  n = name_parts[i];
+                  name_encoded.push(encodeURIComponent(n));
+                }
+                return $.get((base_url + "/") + name_encoded.join("/"), installEditor);
+              }
+            });
+          });
         });
-      });
+      }
+      renderCommitInfo = function(entry) {
+        var author, id, id7, message;
+        id = entry.id, id7 = entry.id7, message = entry.message, author = entry.author;
+        return "<div class=\"commit\">\n  <div class=\"commit-row-title\">\n    <a href=\"?rev=" + id + "\" class=\"id_short\">" + id7 + "</a>\n    <a href=\"?rev=" + id + "\" class=\"message\">" + message + "</a>\n  </div>\n  <div class=\"commit-row-info\">\n    <span class=\"author\">" + author + "</span>\n  </div>\n</div>";
+      };
+      $('ul.this-page-menu').append('<li><a href="?history" id="this-page-history">History</a></li>');
+      last = function(array) {
+        return array[array.length - 1];
+      };
+      if ((ref2 = document.location.search) != null ? ref2.match(/[?&]history(&|$)/) : void 0) {
+        $.getJSON(base_url + "/json/history" + pagePath + "/" + pageName, function(data) {
+          var $ul, changes_per_date, date, date_rec, entries, entry, i, j, last_entry, len, len1, rec, results, title;
+          title = $('h1').eq(0).text().replace(/.$/, '');
+          $('div.documentwrapper > div.bodywrapper > div.body').html("<h1>History for <b>" + pageName + "</b></h1>\n<div id=\"history\"></div>");
+          changes_per_date = [];
+          for (i = 0, len = data.length; i < len; i++) {
+            rec = data[i];
+            date = rec.date;
+            if (changes_per_date.length) {
+              last_entry = last(changes_per_date);
+              if (last_entry.date === date) {
+                last_entry.entries.push(rec);
+              } else {
+                changes_per_date.push({
+                  date: date,
+                  entries: [rec]
+                });
+              }
+            } else {
+              changes_per_date.push({
+                date: date,
+                entries: [rec]
+              });
+            }
+          }
+          results = [];
+          for (j = 0, len1 = changes_per_date.length; j < len1; j++) {
+            date_rec = changes_per_date[j];
+            date = date_rec.date, entries = date_rec.entries;
+            $('#history').append("<h2>" + date + "</h2><ul></ul>");
+            $ul = $('#history > ul').last();
+            results.push((function() {
+              var k, len2, results1;
+              results1 = [];
+              for (k = 0, len2 = entries.length; k < len2; k++) {
+                entry = entries[k];
+                results1.push($ul.append("<li>" + renderCommitInfo(entry) + "</li>"));
+              }
+              return results1;
+            })());
+          }
+          return results;
+        });
+      }
+      if (m = (ref3 = document.location.search) != null ? ref3.match(/\?rev=([^&]*)/) : void 0) {
+        version = m[1];
+        $('div.documentwrapper > div.bodywrapper > div.body').html("<div class=\"loading\">\n  <img src=\"" + DOCUMENTATION_OPTIONS.URL_ROOT + "_static/mw-48x48-transparent-bg-white-loadinfo.net.gif\">\n  <div class=\"loading-text\">loading ...</div>\n</div>");
+        return $.getJSON(base_url + "/json/data" + pagePath + "/" + pageName + "/" + version, function(versionInfo) {
+          return $.post(base_url + "/preview", {
+            page: pageName,
+            path: pagePath,
+            format: 'rest',
+            content: "page: " + pageName + "\npath: " + pagePath + "\n\n" + versionInfo.data
+          }, function(data) {
+            var author, date, id, id7, message, orig;
+            id = versionInfo.id, id7 = versionInfo.id7, message = versionInfo.message, author = versionInfo.author, date = versionInfo.date;
+            orig = document.location.pathname;
+            $('div.documentwrapper > div.bodywrapper > div.body').html('').append("<h1>" + pageName + " as of " + date + " (" + id7 + ")</h1>\n\n<div id=\"wiki-page-info\">\n  <table class=\"page-info\"><tbody>\n    <tr> <th>Date</th> <td>" + date + "</td> </tr>\n    <tr> <th>Author</th> <td>" + author + "</td> </tr>\n    <tr> <th>ID</th> <td>" + id + "</td> </tr>\n    <tr> <th>Message</th> <td>" + message + "</td> </tr>\n  </tbody></table>\n</div>\n\n<div><a href=\"" + orig + "\">Back to current version</a></div>\n\n<div id=\"wiki-review\"></div>");
+            return showPreview('#wiki-review', data);
+          });
+        });
+      }
     });
   });
 

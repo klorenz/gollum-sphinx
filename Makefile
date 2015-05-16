@@ -26,6 +26,11 @@ gollum-sphinx: gollum bundle
 
 _static/wiki.js: src/wiki.coffee
 	coffee -c -o _static/ $<
+	if [ -d ../mw-sphinx-doc ] ; then \
+		cp $@ ../mw-sphinx-doc/_static ;\
+	fi
 
+rest.js: rest.coffee
+	coffee -c -o . $<
 
 .PHONY: gollum

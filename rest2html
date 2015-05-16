@@ -128,6 +128,18 @@ class GitHubHTMLTranslator(HTMLTranslator):
         self.body.append(self.starttag(node, 'img', **atts))
       self.body.append(self.context.pop())
 
+# see https://github.com/github/markup/issues/264
+#from sphinxcontrib import plantuml as plantuml_mod
+
+# do not produce object tags
+#def _my_get_svg_tag(self, fnames, node):
+#     refname, outfname = fnames['svg']
+#     #return '<img src="%s" style="%s">' % (self.encode(refname), _get_svg_style(outfname) or '')
+#     return '<img src="%s">' % self.encode(refname)
+#
+# and override svg creation
+#plantuml_mod._KNOWN_HTML_FORMATS['svg'] = (('svg',), _my_get_svg_tag)
+
 
 def do_publish():
     # publish manually
@@ -258,7 +270,11 @@ def main():
             self.body.append('<a href="%s.html">' % reftarget)
             for n in self.builder.env.titles[reftarget].children:
                 n.walkabout(self)
-        self.body.append('</a>')
+            self.body.append('</a>')
+        elif reftarget in self.builder.env.found_docs:
+            self.body.append('<a href="%s.html">' % reftarget)
+            self.body.append(reftarget)
+            self.body.append('</a>')
 
         raise nodes.SkipNode
 
@@ -320,5 +336,7 @@ def main():
     return ''
 
 if __name__ == '__main__':
-    sys.stdout.write("%s%s" % (main(), "\n"))
+    result = main()
+    #import rpdb2 ; rpdb2.start_embedded_debugger('foo')
+    sys.stdout.write("%s%s" % (result, "\n"))
     sys.stdout.flush()
