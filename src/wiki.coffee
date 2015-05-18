@@ -67,12 +67,6 @@ $ ->
 
     $('#gollum-sphinx-wrapper').append $data.find('#gollum-editor')
 
-    $('#gollum-editor form').submit (event) ->
-      $form = $(this)
-      $.post $form.attr('action'), $form.serialize(), ->
-        document.location.href = document.location.pathname
-      event.preventDefault()
-
     $('#gollum-sphinx-wrapper')
         .append """<div id="gollum-preview" class="markdown-body"></div>"""
 
@@ -213,6 +207,29 @@ $ ->
         textareaScrollHeight = $('#gollum-editor-body')[0].scrollHeight;
         $('#gollum-preview > .document').scrollTop( $('textarea').scrollTop() * previewScrollHeight / textareaScrollHeight );
 
+      $form = $('#gollum-editor form[name="gollum-editor"]')
+
+      $form.append("""<input type="hidden" name="redirect" value="">""")
+
+      updateRedirect = ->
+        if $form.attr('action').match /create$/
+          path = $form.find('input[name="path"]').val()
+          name = $form.find('input[name="page"]').val()
+  
+          redirect = "#{html_base_url}#{path}/#{name}".replace(/\/\/+/, "/")
+        else
+          redirect = document.location.pathname
+
+        $form.find('input[name="redirect"]').val(redirect)
+
+      updateRedirect()
+
+      $form.find('input[name="page"]').change updateRedirect
+
+      $form.submit ->
+        updateRedirect()
+        true
+
       loadPreview()
 
 
@@ -286,6 +303,11 @@ $ ->
 
   $('head').append """
     <link rel="stylesheet" type="text/css" href="#{base_url}/css/dialog.css" media="all">
+    <style>
+        #gollum-dialog-dialog-inner {
+           max-width: 700px;
+        }
+    </style>
     """
 
   $('div.related a[href=#]').each ->

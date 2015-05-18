@@ -74,7 +74,7 @@
       }
       html += '<select ';
       if (id != null) {
-        html += " name=\"" + id + "\" id=\"gollum-dialog-dialog-generated-field-" + id + "\"";
+        html += " name=\"" + id + "\" id=\"gollum-dialog-dialog-generated-field-" + id + "\" style=\"width: 100%\"";
         if (size != null) {
           html += " size=\"" + size + "\"";
         }
@@ -107,6 +107,9 @@
         html += "<option value=\"" + value + "\">" + name + "</option>";
       }
       html += "</select>";
+      if (context != null) {
+        html += "<span class=\"context\">" + context + "</span>";
+      }
       return html;
     };
     thisProject = document.location.toString().match(/\/intranet[^\/]*\/([^\/]*)/)[1];
@@ -192,6 +195,12 @@
             title: 'Insert Link',
             fields: [
               {
+                id: 'doc',
+                name: 'Select Page',
+                type: 'select',
+                options: options,
+                context: "Default of displayed text is the title of the page.  You can specify a custom\nanchor for the link in \"Link Text\""
+              }, {
                 id: 'text',
                 name: 'Link Text',
                 type: 'text',
@@ -199,12 +208,8 @@
               }, {
                 id: 'href',
                 name: 'URL',
-                type: 'text'
-              }, {
-                id: 'doc',
-                name: 'Or Select',
-                type: 'select',
-                options: options
+                type: 'text',
+                context: "Specify a URL, if you want to specify a custom link rather than a page.  "
               }
             ],
             OK: function(res) {

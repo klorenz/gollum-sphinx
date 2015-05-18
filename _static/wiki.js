@@ -55,19 +55,12 @@ build with coffee ...
       $('div.sphinxsidebar').remove();
       $('div.body').replaceWith('<div><div id="gollum-sphinx-wrapper"></div></div>');
       $('#gollum-sphinx-wrapper').append($data.find('#gollum-editor'));
-      $('#gollum-editor form').submit(function(event) {
-        var $form;
-        $form = $(this);
-        $.post($form.attr('action'), $form.serialize(), function() {
-          return document.location.href = document.location.pathname;
-        });
-        return event.preventDefault();
-      });
       $('#gollum-sphinx-wrapper').append("<div id=\"gollum-preview\" class=\"markdown-body\"></div>");
       $('div.bodywrapper').prepend("<ul class=\"actions\"><li class=\"minibutton\"><a href=\"" + document.location.pathname + "\">View Page</a></li>");
       $('head').append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/gollum.css\" media=\"all\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/editor.css\" media=\"all\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/template.css\" media=\"all\">\n\n<style>\ndiv.documentwrapper {\n  position: absolute;\n  top: 3em;\n  bottom: 3em;\n  width: 95%;\n  left: 2.5%;\n}\n\ndiv.markdown-body div.document {\n  text-align: left;\n  padding: 0em 1em 0.4em;\n}\n\n#gollum-sphinx-wrapper {\n  text-align: center;\n}\n\n#gollum-sphinx-wrapper > div {\n  text-align: left;\n  display: inline-block;\n  vertical-align: top;\n  width: 45%;\n}\n\n/* copied from gollum's editor.css */\n#gollum-preview > .document {\n    overflow: auto;\n    background-color: white;\n    border: 1px solid #DDD;\n}\n#gollum-editor {\n}\n.ff #gollum-preview, .ie #gollum-preview {\n    padding-bottom: 1em;\n}\n\n#gollum-preview {\n    margin: 1em 0px 5em;\n    border: 1px solid #E4E4E4;\n    background: #F9F9F9 none repeat scroll 0% 0%;\n    margin: 1em 0px 5em;\n    border-radius: 1em;\n    /* padding: 0em 1em 0.4em; */\n    padding: 1em;\n}\n\n/* now own ones */\n\n\n#wiki-wrapper.edit {\n    width: 95%;\n    /* position: relative; */\n    max-width: none;\n}\n\n#wiki-wrapper.edit #wiki-content > div {\n    display: inline-block;\n    width: 45%;\n    max-width: 980px;\n    vertical-align: top;\n}\n\n#gollum-editor-format-selector {\n    display: none;\n}\n\n#gollum-editor-body + div {\n    font-size: 1em;\n}\n\n#gollum-editor #gollum-editor-preview {\n    display: none;\n}\n/* move button to right\n#gollum-editor input#gollum-editor-submit {\n    float: right;\n}\n*/\n\np.gollum-error {\n    font-family: monospace;\n    white-space: pre;\n    color: red;\n}\n\n#gollum-preview div.toctree {\n    border: 1px solid rgba(0,0,0,0.7);\n    background: rgba(0,0,0,0.3);\n}\n\n#gollum-preview div.toctree:before {\n  content: \"TOCTREE\";\n}\n</style>");
       $('#gollum-editor-body').keydown(onEditorKeyDown);
       return installEditorJavascript(function() {
+        var $form, updateRedirect;
         $('div.related a[href=#]').each(function() {
           return $(this).attr('href', document.location.pathname);
         });
@@ -93,6 +86,25 @@ build with coffee ...
           previewScrollHeight = $('#gollum-preview > .document')[0].scrollHeight;
           textareaScrollHeight = $('#gollum-editor-body')[0].scrollHeight;
           return $('#gollum-preview > .document').scrollTop($('textarea').scrollTop() * previewScrollHeight / textareaScrollHeight);
+        });
+        $form = $('#gollum-editor form[name="gollum-editor"]');
+        $form.append("<input type=\"hidden\" name=\"redirect\" value=\"\">");
+        updateRedirect = function() {
+          var name, path, redirect;
+          if ($form.attr('action').match(/create$/)) {
+            path = $form.find('input[name="path"]').val();
+            name = $form.find('input[name="page"]').val();
+            redirect = ("" + html_base_url + path + "/" + name).replace(/\/\/+/, "/");
+          } else {
+            redirect = document.location.pathname;
+          }
+          return $form.find('input[name="redirect"]').val(redirect);
+        };
+        updateRedirect();
+        $form.find('input[name="page"]').change(updateRedirect);
+        $form.submit(function() {
+          updateRedirect();
+          return true;
         });
         return loadPreview();
       });
@@ -157,7 +169,7 @@ build with coffee ...
         return loadingPreview = true;
       }
     };
-    $('head').append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/dialog.css\" media=\"all\">");
+    $('head').append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + base_url + "/css/dialog.css\" media=\"all\">\n<style>\n    #gollum-dialog-dialog-inner {\n       max-width: 700px;\n    }\n</style>");
     $('div.related a[href=#]').each(function() {
       return $(this).attr('href', document.location);
     });
