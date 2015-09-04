@@ -192,7 +192,7 @@ build with coffee ...
           }
           return $('#create-new-page').click(function() {
             var context_blurb;
-            context_blurb = "Page will be created under <span class=\"path\">" + htmlEscape('/' + pagePath) + "</span>\nunless an absolute path is given.";
+            context_blurb = "Page will be created under <span class=\"path\">" + htmlEscape('/' + pagePath).replace('//+', '/') + "</span>\nunless an absolute path is given.";
             return $.GollumDialog.init({
               title: "Create New Page",
               fields: [

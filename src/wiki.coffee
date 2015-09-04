@@ -341,7 +341,7 @@ $ ->
         $('#create-new-page').click ->
           context_blurb = """
             Page will be created under <span class="path">"""+
-            htmlEscape('/'+pagePath) + """</span>
+            htmlEscape('/'+pagePath).replace('//+', '/') + """</span>
             unless an absolute path is given.
             """
 
