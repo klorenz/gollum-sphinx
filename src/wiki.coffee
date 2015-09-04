@@ -216,7 +216,7 @@ $ ->
           path = $form.find('input[name="path"]').val()
           name = $form.find('input[name="page"]').val()
   
-          redirect = "#{html_base_url}#{path}/#{name}".replace(/\/\/+/, "/")
+          redirect = "#{base_url}#{path}/#{name}".replace(/\/\/+/, "/")
         else
           redirect = document.location.pathname
 
