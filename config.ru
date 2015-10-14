@@ -198,7 +198,9 @@ module Precious
             if spawn.status.success?
               sanitize(spawn.out, target.encoding)
             else
-              raise GitHub::MarkUp::CommandError.new(spawn.err.strip)
+              sanitize("<html><body><pre>#{spawn.err.strip}</pre></body></html>", target.encoding)
+
+              #raise GitHub::MarkUp::CommandError.new(spawn.err.strip)
             end
           end
         else
@@ -209,7 +211,8 @@ module Precious
               if wait_thr.value.success?
                 stdout.readlines
               else
-                raise GitHub::MarkUp::CommandError.new(stderr.readlines.join('').strip)
+                #raise GitHub::MarkUp::CommandError.new(stderr.readlines.join('').strip)
+                "<htmL><body><pre>#{stderr.readlines.join('').strip}</pre></body></html>"
               end
             end
             sanitize(output.join(''), target.encoding)
